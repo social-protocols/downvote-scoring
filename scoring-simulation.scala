@@ -9,7 +9,9 @@ object Content {
   // TODO: experiment with different distributions:
   // - Gaussian
   // - Exponential
-  def random(now: Long) = Content(quality = Random.nextDouble, now)
+  // def quality() = Random.nextGaussian
+  def quality() = Random.nextDouble
+  def random(now: Long) = Content(quality = quality(), now)
 }
 
 sealed trait Scoring {
@@ -43,16 +45,19 @@ case object OnlyDownvote extends Scoring {
   }
 }
 
-val iterations = 4000
+val iterations = 3000
 val newContentEvery = 10
 val frontPageSize = 10
-val scoring: Scoring = OnlyDownvote
+val scoring: Scoring = HackerNews
 
-val collection = mutable.ArrayBuffer.empty[Content]
+var collection = mutable.ArrayBuffer.empty[Content]
 val votes = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
 def totalVotes = votes.values.sum
 def currentTime = totalVotes // every vote is one time-step
-def sortedCollection = collection.sortBy(c => -scoring.score(votes(c), age = c.age(currentTime)))
+def sortedCollection = {
+  collection = collection.sortBy(c => -scoring.score(votes(c), age = c.age(currentTime)))
+  collection
+}
 def frontpage = sortedCollection.take(frontPageSize)
 
 for (i <- 0 until iterations) {
@@ -60,9 +65,9 @@ for (i <- 0 until iterations) {
     collection += Content.random(currentTime)
 
   val currentFrontpage = frontpage
-  val qualityExpectation = Random.nextDouble
-  // val selectedContent = frontpage((currentFrontpage.length * (Random.nextDouble * Random.nextDouble)).toInt) // lower indices have higher probability to be voted on
-  val selectedContent = frontpage((currentFrontpage.length * Random.nextDouble).toInt) // lower indices have higher probability to be voted on
+  val qualityExpectation = Content.quality()
+  val selectedContent = frontpage((currentFrontpage.length * (Random.nextDouble * Random.nextDouble)).toInt) // lower indices have higher probability to be voted on
+  // val selectedContent = frontpage((currentFrontpage.length * Random.nextDouble).toInt) // lower indices have higher probability to be voted on
   if (scoring.voteCondition(selectedContent.quality, qualityExpectation))
     votes(selectedContent) += 1
 
