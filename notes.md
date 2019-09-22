@@ -10,6 +10,8 @@
   - aber zum selben Zeitpunkt die selbe qualität
 - Menschen können besser down-voten als up-voten (related work)
 - einfache formel
+- Voting Ringe sind schwieriger aufzubauen
+- Wenn es bots gibt, die immer auf allen Artikeln auf der frontpage voten, bekommen langfristig alle Artikel gleich viele votes. Bei upvotes wäre es rich-get-richer
 
 Fragen
 - Wachsende community?
