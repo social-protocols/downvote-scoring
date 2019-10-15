@@ -1,5 +1,5 @@
 # Emergent 
-- No Rich get richer
+- No Rich get richer, es gibt keine Schwelle von Votes über die ein Artikel steigen muss, um exponentiell zu wachsen, daher insgesamt weniger chaotisches system
 - good distribution Qualität und Votes
 - wenig false negatives
 - keine false positives
