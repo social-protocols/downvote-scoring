@@ -1,4 +1,4 @@
-# Emergent 
+# Emergent
 - No Rich get richer, es gibt keine Schwelle von Votes über die ein Artikel steigen muss, um exponentiell zu wachsen, daher insgesamt weniger chaotisches system
 - good distribution Qualität und Votes
 - wenig false negatives
@@ -13,12 +13,14 @@
 - einfache formel
 - Voting Ringe sind schwieriger aufzubauen, der Aufwand alles andere downzuvoten steigt mit der gesamt-Anzahl der Artikel
 - Wenn es bots gibt, die immer auf allen Artikeln auf der frontpage voten, bekommen langfristig alle Artikel gleich viele votes. Bei upvotes wäre es rich-get-richer
+- RBO als Metric für Ranked listen
 
-Fragen
+
+# Fragen
 - Wachsende community?
   - alte beitrage bubblen (schlimm?)
-  - Timely vs encyclopeadic 
-- Einfluss der Q- Distribution auf V-Distribution ?
+  - Timely vs encyclopeadic
+- Einfluss der Quality- Distribution auf Vote-Distribution ?
 
 # Future Work
 - Eine Kollaborative Suchmaschine, in der zu einem bestimmten Suchbegriff/Phrase die Ergebnisse downgevoted werden können
