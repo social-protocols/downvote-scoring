@@ -24,3 +24,20 @@
 
 # Future Work
 - Eine Kollaborative Suchmaschine, in der zu einem bestimmten Suchbegriff/Phrase die Ergebnisse downgevoted werden können
+
+
+tmate für terminal sharing
+
+
+
+# Idee Neu
+
+Word of Mouth recommender mit follower network
+
+taste-vector per movie
+users estimate the taste of friends with differing uncertainty
+new movies are evaluated against threshold
+then recommended
+with feedback/w/o
+
+then machine learning
