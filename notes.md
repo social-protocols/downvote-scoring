@@ -3,6 +3,7 @@
 - good distribution Qualität und Votes
 - wenig false negatives
 - keine false positives
+- bei unsicherheit wird nicht automatisch schlecht, sondern gut bewertet (wirkt echo-chamber entgegen)
 - high linear correlation votes vs quality
 - high linear correlation votes vs clicks (important, because often clicks translate to money, e.g. App downloads / Advertising)
 - lohnt sich als archiv funktion
