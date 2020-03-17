@@ -1,5 +1,6 @@
 import scala.util.Random
 import scala.collection.{ mutable }
+import scala.math.Ordering.Float.TotalOrdering
 
 case class Content(quality: Double, timestamp: Long) {
   def age(now: Long) = now - timestamp
@@ -37,6 +38,11 @@ case object HackerNews extends Scoring {
   }
 }
 
+case object Reddit extends Scoring {
+  // TODO
+  // https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-work-ef111e33d0d9
+}
+
 case object OnlyDownvote extends Scoring {
   def score(downvotes: Long, age: Long): Double = {
     -(downvotes+1) * age
@@ -61,15 +67,16 @@ case object RemoveDownvote extends Scoring {
   override def voteChange(oldVoteCount:Long):Long = oldVoteCount - 1
 }
 
-val iterations = 3000
-val newContentEvery = 10
-val frontPageSize = 10
-val scoring: Scoring = RemoveDownvote
+val iterations = 100000
+val newContentEvery = 50
+val frontPageSize = 20
+val scoring: Scoring = HackerNews
 
 var collection = mutable.ArrayBuffer.empty[Content]
 val votes = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
+val views = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
 def totalVotes = votes.values.sum
-def currentTime = totalVotes // every vote is one time-step
+def currentTime = collection.size // different time-step possibilities: every vote is one time-step, every new content is one time step
 def sortedCollection = {
   collection = collection.sortBy(c => -scoring.score(votes(c), age = c.age(currentTime)))
   collection
@@ -82,10 +89,12 @@ for (i <- 0 until iterations) {
   if (i % newContentEvery == 0)
     collection += Content.random(currentTime)
 
+  //TODO: the time between loading the frontpage and voting is delayed in reality
   val currentFrontpage = frontpage
-  val qualityExpectation = Content.quality()
+  val qualityExpectation = Content.quality() * 1.1 // expectation is never met for everybody
   val selectedContent = frontpage((currentFrontpage.length * (Random.nextDouble * Random.nextDouble)).toInt) // lower indices have higher probability to be voted on
   // val selectedContent = frontpage((currentFrontpage.length * Random.nextDouble).toInt) // lower indices have higher probability to be voted on
+  views(selectedContent) += 1
   votes(selectedContent) = scoring.viewChange(votes(selectedContent))
   if (scoring.voteCondition(selectedContent.quality, qualityExpectation))
     votes(selectedContent) = scoring.voteChange(votes(selectedContent))
@@ -97,5 +106,5 @@ for (i <- 0 until iterations) {
 
 // write into file and plot with gnuplot:
 // :gnuplot> plot 'filename'
-println(sortedCollection.map(c => s"${c.quality} ${scoring.estimatedQuality(votes(c))}").mkString("\n"))
+println(sortedCollection.map(c => s"${c.quality} ${scoring.estimatedQuality(votes(c))} ${views(c)}").mkString("\n"))
 // println(sortedCollection.zipWithIndex.map{case (c, rank) => s"${c.quality} ${rank}"}.mkString("\n"))
