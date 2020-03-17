@@ -1,5 +1,5 @@
 import scala.util.Random
-import scala.collection.{ IterableLike, mutable }
+import scala.collection.{ mutable }
 
 case class Content(quality: Double, timestamp: Long) {
   def age(now: Long) = now - timestamp
@@ -18,6 +18,8 @@ sealed trait Scoring {
   def score(votes: Long, age: Long): Double
   def voteCondition(quality: Double, expectation: Double): Boolean
   def estimatedQuality(votes:Long):Long
+  def viewChange(oldVoteCount:Long):Long = oldVoteCount
+  def voteChange(oldVoteCount:Long):Long = oldVoteCount + 1
 }
 
 case object HackerNews extends Scoring {
@@ -45,10 +47,24 @@ case object OnlyDownvote extends Scoring {
   }
 }
 
+case object RemoveDownvote extends Scoring {
+  // every view is a downvote.
+  // upvoting button, which removes the downvote
+  def score(downvotes: Long, age: Long): Double = {
+    -(downvotes+1) * age
+  }
+  def estimatedQuality(downvotes:Long) = -downvotes
+  def voteCondition(quality: Double, expectation: Double): Boolean = {
+    quality > expectation
+  }
+  override def viewChange(oldVoteCount:Long):Long = oldVoteCount + 1
+  override def voteChange(oldVoteCount:Long):Long = oldVoteCount - 1
+}
+
 val iterations = 3000
 val newContentEvery = 10
 val frontPageSize = 10
-val scoring: Scoring = HackerNews
+val scoring: Scoring = RemoveDownvote
 
 var collection = mutable.ArrayBuffer.empty[Content]
 val votes = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
@@ -58,6 +74,8 @@ def sortedCollection = {
   collection = collection.sortBy(c => -scoring.score(votes(c), age = c.age(currentTime)))
   collection
 }
+
+
 def frontpage = sortedCollection.take(frontPageSize)
 
 for (i <- 0 until iterations) {
@@ -68,8 +86,10 @@ for (i <- 0 until iterations) {
   val qualityExpectation = Content.quality()
   val selectedContent = frontpage((currentFrontpage.length * (Random.nextDouble * Random.nextDouble)).toInt) // lower indices have higher probability to be voted on
   // val selectedContent = frontpage((currentFrontpage.length * Random.nextDouble).toInt) // lower indices have higher probability to be voted on
+  votes(selectedContent) = scoring.viewChange(votes(selectedContent))
   if (scoring.voteCondition(selectedContent.quality, qualityExpectation))
-    votes(selectedContent) += 1
+    votes(selectedContent) = scoring.voteChange(votes(selectedContent))
+
 
   // println(frontpage.map(c => f"Q:${c.quality}%.3f age:${c.age(currentTime)}%5.0f votes:${votes(c)}%5.0f score:${scoring.score(votes(c), age = c.age(currentTime))}%8.4f").mkString(s"Frontpage (${totalVotes}):\n", "\n", "\n"))
   // Thread.sleep(100)
