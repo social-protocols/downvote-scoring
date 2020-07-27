@@ -1,6 +1,12 @@
 import scala.util.Random
 import scala.collection.{ mutable }
-import scala.math.Ordering.Float.TotalOrdering
+import scala.math.Ordering.Double.TotalOrdering
+
+val iterations = 100000
+val newContentEvery = 15
+val frontPageSize = 30
+val scoring: Scoring = RemoveDownvote
+
 
 case class Content(quality: Double, timestamp: Long) {
   def age(now: Long) = now - timestamp
@@ -38,10 +44,10 @@ case object HackerNews extends Scoring {
   }
 }
 
-case object Reddit extends Scoring {
-  // TODO
-  // https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-work-ef111e33d0d9
-}
+// case object Reddit extends Scoring {
+//   // TODO
+//   // https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-work-ef111e33d0d9
+// }
 
 case object OnlyDownvote extends Scoring {
   def score(downvotes: Long, age: Long): Double = {
@@ -67,11 +73,6 @@ case object RemoveDownvote extends Scoring {
   override def voteChange(oldVoteCount:Long):Long = oldVoteCount - 1
 }
 
-val iterations = 100000
-val newContentEvery = 50
-val frontPageSize = 20
-val scoring: Scoring = HackerNews
-
 var collection = mutable.ArrayBuffer.empty[Content]
 val votes = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
 val views = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
@@ -91,8 +92,8 @@ for (i <- 0 until iterations) {
 
   //TODO: the time between loading the frontpage and voting is delayed in reality
   val currentFrontpage = frontpage
-  val qualityExpectation = Content.quality() * 1.1 // expectation is never met for everybody
-  val selectedContent = frontpage((currentFrontpage.length * (Random.nextDouble * Random.nextDouble)).toInt) // lower indices have higher probability to be voted on
+  val qualityExpectation = Content.quality() * 1.1 // expectation is never met for anybody
+  val selectedContent = frontpage((currentFrontpage.length * (Random.nextDouble * Random.nextDouble)).toInt) // lower indices are higher on the frontpage and therefore have a higher probability to be viewed
   // val selectedContent = frontpage((currentFrontpage.length * Random.nextDouble).toInt) // lower indices have higher probability to be voted on
   views(selectedContent) += 1
   votes(selectedContent) = scoring.viewChange(votes(selectedContent))

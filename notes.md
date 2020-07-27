@@ -15,6 +15,8 @@
 - Voting Ringe sind schwieriger aufzubauen, der Aufwand alles andere downzuvoten steigt mit der gesamt-Anzahl der Artikel
 - Wenn es bots gibt, die immer auf allen Artikeln auf der frontpage voten, bekommen langfristig alle Artikel gleich viele votes. Bei upvotes wäre es rich-get-richer
 - RBO als Metric für Ranked listen
+- Scales with submissions/voters ratio
+- Wenn neue votes als Zeit interpretiert werden, dann vergeht die Zeit mit einer größeren Community schneller
 
 
 # Fragen
