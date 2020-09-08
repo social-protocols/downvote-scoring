@@ -5,7 +5,7 @@ import scala.math.Ordering.Double.TotalOrdering
 val iterations = 100000
 val newContentEvery = 15
 val frontPageSize = 30
-val scoring: Scoring = RemoveDownvote
+val scoring: Scoring = HackerNewsNormalized
 
 
 case class Content(quality: Double, timestamp: Long) {
@@ -22,7 +22,7 @@ object Content {
 }
 
 sealed trait Scoring {
-  def score(votes: Long, age: Long): Double
+  def score(votes: Long, age: Long, views: Long): Double
   def voteCondition(quality: Double, expectation: Double): Boolean
   def estimatedQuality(votes:Long):Long
   def viewChange(oldVoteCount:Long):Long = oldVoteCount
@@ -30,11 +30,26 @@ sealed trait Scoring {
 }
 
 case object HackerNews extends Scoring {
-  def score(upvotes: Long, age: Long): Double = {
+  def score(upvotes: Long, age: Long, views: Long): Double = {
     // https://medium.com/hacking-and-gonzo/how-hacker-news-ranking-algorithm-works-1d9b0cf2c08d
     val gravity = 1.8
     val base = upvotes + 1
     (if (base > 0) Math.pow(base, 0.8) else base) / Math.pow(age + 1, gravity)
+  }
+
+  def estimatedQuality(upvotes:Long) = upvotes
+
+  def voteCondition(quality: Double, expectation: Double): Boolean = {
+    quality > expectation
+  }
+}
+
+case object HackerNewsNormalized extends Scoring {
+  def score(upvotes: Long, age: Long, views: Long): Double = {
+    // https://medium.com/hacking-and-gonzo/how-hacker-news-ranking-algorithm-works-1d9b0cf2c08d
+    val gravity = 1.8
+    val base = upvotes + 1
+    (if (base > 0) Math.pow(base, 0.8) else base) / Math.pow(age + 1, gravity) / views
   }
 
   def estimatedQuality(upvotes:Long) = upvotes
@@ -50,7 +65,7 @@ case object HackerNews extends Scoring {
 // }
 
 case object OnlyDownvote extends Scoring {
-  def score(downvotes: Long, age: Long): Double = {
+  def score(downvotes: Long, age: Long, views: Long): Double = {
     -(downvotes+1) * age
   }
   def estimatedQuality(downvotes:Long) = -downvotes
@@ -62,7 +77,7 @@ case object OnlyDownvote extends Scoring {
 case object RemoveDownvote extends Scoring {
   // every view is a downvote.
   // upvoting button, which removes the downvote
-  def score(downvotes: Long, age: Long): Double = {
+  def score(downvotes: Long, age: Long, views: Long): Double = {
     -(downvotes+1) * age
   }
   def estimatedQuality(downvotes:Long) = -downvotes
@@ -79,7 +94,7 @@ val views = mutable.HashMap.empty[Content, Long].withDefaultValue(0)
 def totalVotes = votes.values.sum
 def currentTime = collection.size // different time-step possibilities: every vote is one time-step, every new content is one time step
 def sortedCollection = {
-  collection = collection.sortBy(c => -scoring.score(votes(c), age = c.age(currentTime)))
+  collection = collection.sortBy(c => -scoring.score(votes(c), age = c.age(currentTime), views = views(c)))
   collection
 }
 

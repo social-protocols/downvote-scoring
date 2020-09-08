@@ -26,6 +26,21 @@ Observations:
 - There are outliers with very high scores
 - The variation of scores is higher on higher quality content
 
+## Hacker News Normalized by Views
+
+![](correlation-data-hn-normalized.png)
+
+Scoring Formula:
+```scala
+val gravity = 1.8
+val base = upvotes + 1
+val score = (if (base > 0) Math.pow(base, 0.8) else base) / Math.pow(age + 1, gravity) / views
+```
+
+Observations:
+- The formula stayed the same and keeps its time-based decay characteristics
+- There are no more false negatives (high quality content with low score)
+
 ## Only Downvotes
 
 ![](correlation-data-onlydownvote.png)
