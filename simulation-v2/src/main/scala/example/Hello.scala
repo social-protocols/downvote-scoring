@@ -25,17 +25,19 @@ object Hello {
   def submitProcess(
       timeSeconds: Int
   ): Boolean = timeSeconds % 72 == 0
-  def submit(timeSeconds: Int, submissions: mutable.ArrayBuffer[Submission]) {
-    if (submitProcess(timeSeconds)) {
-      val nextId = submissions.size
-      val newSubmission = new Submission(
-        id = nextId,
-        time = timeSeconds,
-        quality = Submission.randomQuality
-      )
-      submissions += newSubmission
-      println(s"submission at $timeSeconds")
-    }
+  def submit(
+      timeSeconds: Int,
+      submissions: mutable.ArrayBuffer[Submission],
+      votes: Int = 1
+  ) {
+    val nextId = submissions.size
+    val newSubmission = new Submission(
+      id = nextId,
+      time = timeSeconds,
+      quality = Submission.randomQuality,
+      votes = votes
+    )
+    submissions += newSubmission
   }
   def score(upvotes: Int, ageSeconds: Int): Double = {
     // http://www.righto.com/2013/11/how-hacker-news-ranking-really-works.html
@@ -54,7 +56,12 @@ object Hello {
   }
 
   def frontpage(submissions: mutable.ArrayBuffer[Submission]) = {
-    submissions.takeRight(updateSize).sortBy(-_.score).take(frontpageSize)
+    //TODO: upvotes including myself (>= 3) or not (>= 4)?
+    submissions
+      .takeRight(updateSize)
+      .sortBy(-_.score)
+      .filter(_.votes >= 3)
+      .take(frontpageSize)
   }
   def newpage(submissions: mutable.ArrayBuffer[Submission]) = {
     submissions.takeRight(newPageSize).reverse
@@ -76,13 +83,24 @@ object Hello {
 
   def main(args: Array[String]) = {
 
-    val submissions = mutable.ArrayBuffer.empty[Submission]
-
     var timeSeconds = 0
+    val submissions = mutable.ArrayBuffer.empty[Submission]
+    submit(
+      timeSeconds,
+      submissions,
+      votes = 5
+    ) // TODO: initialize with the 1500 stories of real data
+
     while (timeSeconds < 1000) {
-      submit(timeSeconds, submissions)
+
+      if (submitProcess(timeSeconds)) {
+        submit(timeSeconds, submissions)
+        println(s"submission at $timeSeconds")
+      }
+
       if (timeSeconds % updateIntervalSeconds == 0)
         updateFrontpageScores(timeSeconds, submissions)
+
       usersVote(frontpage(submissions), newpage(submissions))
 
       timeSeconds += 1
