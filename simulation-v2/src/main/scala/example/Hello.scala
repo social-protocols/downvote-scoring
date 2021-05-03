@@ -2,6 +2,7 @@ package example
 
 import collection.mutable
 import util.Random.{nextDouble => nextRandomDouble}
+import breeze.stats.distributions._
 
 class Submission(
     val id: Int,
@@ -21,10 +22,10 @@ object Hello {
   val frontpageSize = 90
   val newPageSize = 90
   val newFrontPageVotingRatio = 0.1 // TODO
+  val averageSubmissionArrivalSeconds = 78.290865 // from bigquery 2021
+  val minimVotesForFrontpage = 3 //TODO
+  val averageVoteArrivalSeconds = 1.0 / (6106438.0 / 365 / 24 / 3600) // ~5
 
-  def submitProcess(
-      timeSeconds: Int
-  ): Boolean = timeSeconds % 72 == 0
   def submit(
       timeSeconds: Int,
       submissions: mutable.ArrayBuffer[Submission],
@@ -39,13 +40,14 @@ object Hello {
     )
     submissions += newSubmission
   }
+
   def score(upvotes: Int, ageSeconds: Int): Double = {
     // http://www.righto.com/2013/11/how-hacker-news-ranking-really-works.html
     val ageHours = ageSeconds / 3600.0
     Math.pow(upvotes - 1, 0.8) / Math.pow(ageHours + 2, 1.8)
   }
 
-  def updateFrontpageScores(
+  def updateScoresOfNewestSubmissions(
       timeSeconds: Int,
       submissions: mutable.ArrayBuffer[Submission]
   ) {
@@ -56,11 +58,10 @@ object Hello {
   }
 
   def frontpage(submissions: mutable.ArrayBuffer[Submission]) = {
-    //TODO: upvotes including myself (>= 3) or not (>= 4)?
     submissions
       .takeRight(updateSize)
       .sortBy(-_.score)
-      .filter(_.votes >= 3)
+      .filter(_.votes >= minimVotesForFrontpage + 1)
       .take(frontpageSize)
   }
   def newpage(submissions: mutable.ArrayBuffer[Submission]) = {
@@ -83,7 +84,17 @@ object Hello {
 
   def main(args: Array[String]) = {
 
+    val nextSubmissionArrivalDelay = new Exponential(
+      1.0 / averageSubmissionArrivalSeconds
+    )
+
+    val nextVoteArrivalDelay = new Exponential(
+      1.0 / averageVoteArrivalSeconds
+    )
+
     var timeSeconds = 0
+    var nextSubmission = nextSubmissionArrivalDelay.get()
+    var nextVote = nextVoteArrivalDelay.get()
     val submissions = mutable.ArrayBuffer.empty[Submission]
     submit(
       timeSeconds,
@@ -93,15 +104,22 @@ object Hello {
 
     while (timeSeconds < 1000) {
 
-      if (submitProcess(timeSeconds)) {
+      val submissionArrives = timeSeconds >= nextSubmission
+      if (submissionArrives) {
         submit(timeSeconds, submissions)
-        println(s"submission at $timeSeconds")
+        nextSubmission += nextSubmissionArrivalDelay.get()
+        println(s"submission at ${timeSeconds / 60.0}")
       }
 
       if (timeSeconds % updateIntervalSeconds == 0)
-        updateFrontpageScores(timeSeconds, submissions)
+        updateScoresOfNewestSubmissions(timeSeconds, submissions)
 
-      usersVote(frontpage(submissions), newpage(submissions))
+      val voteArrives = timeSeconds >= nextVote
+      if (voteArrives) {
+        usersVote(frontpage(submissions), newpage(submissions)) // CONTINUE HERE
+        nextVote += nextVoteArrivalDelay.get()
+        println(s"Vote at ${timeSeconds / 60.0}")
+      }
 
       timeSeconds += 1
     }
