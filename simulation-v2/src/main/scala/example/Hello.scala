@@ -24,7 +24,8 @@ object Hello {
   val newFrontPageVotingRatio = 0.1 // TODO
   val averageSubmissionArrivalSeconds = 78.290865 // from bigquery 2021
   val minimVotesForFrontpage = 3 //TODO
-  val averageVoteArrivalSeconds = 1.0 / (6106438.0 / 365 / 24 / 3600) // ~5
+  val averageVoteArrivalSeconds =
+    1.0 / (6106438.0 / 365 / 24 / 3600) // ~5 from bigquery
 
   def submit(
       timeSeconds: Int,
@@ -102,13 +103,13 @@ object Hello {
       votes = 5
     ) // TODO: initialize with the 1500 stories of real data
 
-    while (timeSeconds < 1000) {
+    while (timeSeconds < (60 * 60 * 24)) {
 
       val submissionArrives = timeSeconds >= nextSubmission
       if (submissionArrives) {
         submit(timeSeconds, submissions)
         nextSubmission += nextSubmissionArrivalDelay.get()
-        println(s"submission at ${timeSeconds / 60.0}")
+        // println(s"submission at ${timeSeconds / 60.0}")
       }
 
       if (timeSeconds % updateIntervalSeconds == 0)
@@ -118,7 +119,16 @@ object Hello {
       if (voteArrives) {
         usersVote(frontpage(submissions), newpage(submissions)) // CONTINUE HERE
         nextVote += nextVoteArrivalDelay.get()
-        println(s"Vote at ${timeSeconds / 60.0}")
+        // println(s"Vote at ${timeSeconds / 60.0}")
+      }
+
+      if (timeSeconds % 60 == 0) {
+        println(
+          frontpage(submissions)
+            .map(s => s"${s.id}, votes: ${s.votes}, score: ${s.score}")
+            .mkString("\n")
+        )
+        println()
       }
 
       timeSeconds += 1
