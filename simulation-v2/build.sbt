@@ -1,17 +1,13 @@
-import Dependencies._
-
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / scalaVersion := "2.13.6"
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / organization := "com.example"
-ThisBuild / organizationName := "example"
 
 lazy val root = (project in file("."))
   .settings(
     name := "simulation-v2",
+    resolvers += ("jitpack" at "https://jitpack.io"),
     libraryDependencies ++= Seq(
-      "org.scalanlp" %% "breeze" % "1.2",
-      "org.scalanlp" %% "breeze-natives" % "1.2",
-      scalaTest % Test
+      "com.github.fdietze.probability-monad" %% "probability-monad" % "837a419257883",
+      "org.scalatest" %% "scalatest" % "3.2.2" % Test
     )
   )
 
