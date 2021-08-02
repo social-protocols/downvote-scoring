@@ -24,12 +24,13 @@ object Hello {
   }
 
   val app = {
-    val liveNewPage  = Subject.behavior[Seq[Submission]](Nil)
-    val liveTopPage  = Subject.behavior[Seq[Submission]](Nil)
-    val tickTime     = Subject.behavior(15)
-    val resetTrigger = Subject.behavior(())
-    val subSteps     = 600
-    val tick         = resetTrigger
+    val liveNewPage     = Subject.behavior[Seq[Submission]](Nil)
+    val liveTopPage     = Subject.behavior[Seq[Submission]](Nil)
+    val bestQualityPage = Subject.behavior[Seq[Submission]](Nil)
+    val tickTime        = Subject.behavior(15)
+    val resetTrigger    = Subject.behavior(())
+    val subSteps        = 600
+    val tick            = resetTrigger
       .switchMap(_ =>
         tickTime
           .switchMap(tickTime =>
@@ -46,8 +47,9 @@ object Hello {
     }
 
     tick.sampleMillis(500).foreach { _ =>
-      liveTopPage.onNext(Simulation.frontpage(Simulation.submissions).toSeq)
       liveNewPage.onNext(Simulation.newpage(Simulation.submissions).toSeq)
+      liveTopPage.onNext(Simulation.frontpage(Simulation.submissions).toSeq)
+      bestQualityPage.onNext(Simulation.bestQualityFrontpage(Simulation.submissions).toSeq)
     }
 
     div(
@@ -58,6 +60,7 @@ object Hello {
         display.flex,
         liveNewPage.map(x => showPage(x)),
         liveTopPage.map(showPage),
+        bestQualityPage.map(showPage),
       ),
     )
   }
@@ -75,11 +78,11 @@ object Hello {
   }
 
   def showSubmission(submission: Submission) = {
-    val title     = s"Quality: ${submission.quality}"
-    val subtitle  = s"${submission.votes} points, ${timeSpan(Simulation.timeSeconds - submission.timeSeconds)} ago"
-    val textColor = s"rgba(0,0,255,${submission.quality})"
+    val title        = s"Quality: ${submission.quality}"
+    val subtitle     = s"${submission.votes} points, ${timeSpan(Simulation.timeSeconds - submission.timeSeconds)} ago"
+    val qualityColor = s"rgba(0,0,255,${Math.min(submission.quality / 0.04, 1.0)})"
     div(
-      div(title, color := textColor),
+      div(title, color := qualityColor),
       div(subtitle, opacity := 0.5),
     )
   }

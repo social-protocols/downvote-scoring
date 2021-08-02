@@ -12,7 +12,7 @@ class Submission(
 )
 
 object Submission {
-  def randomQuality = util.Random.nextDouble()
+  def randomQuality = Data.qualityDistribution.sample(1).head
 }
 
 object Simulation {
@@ -48,6 +48,12 @@ object Simulation {
     }
   }
 
+  def bestQualityFrontpage(submissions: mutable.ArrayBuffer[Submission]) = {
+    submissions
+      .takeRight(Data.updateSize)
+      .sortBy(-_.quality)
+      .take(Data.frontpageSize)
+  }
   def frontpage(submissions: mutable.ArrayBuffer[Submission]) = {
     submissions
       .takeRight(Data.updateSize)
