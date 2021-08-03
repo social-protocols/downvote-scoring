@@ -17,6 +17,8 @@ import scala.scalajs.js.annotation._
 object TailwindCss extends js.Object
 
 object Hello {
+  TailwindCss // load css
+
   def main(args: Array[String]) = {
 
     Outwatch.renderReplace[IO]("#app", app).unsafeRunSync()
@@ -67,6 +69,7 @@ object Hello {
 
   def showPage(submissions: Seq[Submission]) = {
     div(
+      cls := "p-5",
       submissions.map(showSubmission),
     )
   }
@@ -78,7 +81,7 @@ object Hello {
   }
 
   def showSubmission(submission: Submission) = {
-    val title        = s"Quality: ${submission.quality}"
+    val title        = s"Quality: ${f"${submission.quality}%1.3f"}"
     val subtitle     = s"${submission.votes} points, ${timeSpan(Simulation.timeSeconds - submission.timeSeconds)} ago"
     val qualityColor = s"rgba(0,0,255,${Math.min(submission.quality / 0.04, 1.0)})"
     div(
