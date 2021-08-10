@@ -69,20 +69,30 @@ object Simulation {
       frontpage: mutable.ArrayBuffer[Submission],
       newpage: mutable.ArrayBuffer[Submission],
   ) = {
+    val x = 1.0
     if (nextRandomDouble() > Data.newFrontPageVotingRatio) {
       // frontpage
       var didVote = false
-      while (!didVote) {
-        val selectedRank = Data.voteGainOnTopRankDistribution.sample(1).head
-        if (nextRandomDouble() < frontpage(selectedRank).quality) {
+      val selectedRanks = Data.voteGainOnTopRankDistribution.sample(1000).distinct.toArray
+      var i = 0
+      while (!didVote && i < selectedRanks.size) {
+        val selectedRank = selectedRanks(i)
+        if (nextRandomDouble() < x * frontpage(selectedRank).quality) {
           frontpage(selectedRank).votes += 1
-          didVote = true
+          didVote = true 
         }
+        i += 1
       }
     } else {
       // newpage
-      val selectedRank = Data.voteGainOnNewRankDistribution.sample(1).head
-      newpage(selectedRank).votes += 1
+      var didVote = false
+      while (!didVote) {
+        val selectedRank = Data.voteGainOnNewRankDistribution.sample(1).head
+        if (nextRandomDouble() < x * frontpage(selectedRank).quality) {
+          newpage(selectedRank).votes += 1
+          didVote = true
+        }
+      }
     }
   }
 

@@ -61,7 +61,7 @@ object Hello {
       div(
         display.flex,
         liveNewPage.map(x => showPage(x)),
-        liveTopPage.map(showPage),
+        liveTopPage.map(x => div(x.take(89).map(_.votes).sum, showPage(x))),
         bestQualityPage.map(showPage),
       ),
     )
@@ -70,7 +70,7 @@ object Hello {
   def showPage(submissions: Seq[Submission]) = {
     div(
       cls := "p-5",
-      submissions.map(showSubmission),
+      submissions.take(30).map(showSubmission),
     )
   }
 
@@ -81,7 +81,7 @@ object Hello {
   }
 
   def showSubmission(submission: Submission) = {
-    val title        = s"Quality: ${f"${submission.quality}%1.3f"}"
+    val title        = s"${submission.id} Quality: ${f"${submission.quality}%1.3f"}"
     val subtitle     = s"${submission.votes} points, ${timeSpan(Simulation.timeSeconds - submission.timeSeconds)} ago"
     val qualityColor = s"rgba(0,0,255,${Math.min(submission.quality / 0.04, 1.0)})"
     div(
