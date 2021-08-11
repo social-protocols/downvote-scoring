@@ -9,7 +9,9 @@ class Submission(
     val quality: Double,
     var score: Int = 1, // = upvotes + 1
     var rankingFormulaValue: Double = 0,
-)
+) {
+  def age(nowTick: Int) = nowTick - timeSeconds
+}
 
 object Submission {
   def randomQuality = Data.qualityDistribution.sample(1).head
@@ -43,7 +45,7 @@ object Simulation {
       submissions: mutable.ArrayBuffer[Submission],
   ) = {
     submissions.takeRight(Data.updateSize).foreach { sub =>
-      val ageSeconds = timeSeconds - sub.timeSeconds
+      val ageSeconds = sub.age(timeSeconds)
       sub.rankingFormulaValue = rankingFormula(sub.score, ageSeconds)
     }
   }
