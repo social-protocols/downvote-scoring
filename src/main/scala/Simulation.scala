@@ -58,7 +58,7 @@ object Simulation {
     submissions
       .takeRight(Data.updateSize)
       .sortBy(-_.score)
-      .filter(_.votes >= Data.minimVotesForFrontpage + 1)
+      .filter(_.votes >= Data.minimVotesForFrontpage)
       .take(Data.frontpageSize)
   }
   def newpage(submissions: mutable.ArrayBuffer[Submission]) = {
