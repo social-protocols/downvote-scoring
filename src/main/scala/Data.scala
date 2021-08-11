@@ -7,8 +7,10 @@ object Data {
   val updateIntervalSeconds   = 10
   val frontpageSize           = 90
   val newPageSize             = 90
-  val newFrontPageVotingRatio = 0.1 // TODO
-  val minimVotesForFrontpage  = 3   //TODO
+  val newFrontPageVotingRatio =
+    0.0847554613080211 // select (select cast(sum(gain) as real) from dataset where newrank is not null and toprank is null) / (select sum(gain) from dataset where newrank is null and toprank is not null);
+  val minScoreToAppearOnFrontpage =
+    3 // select count(*), score, id from dataset where toprank is not null group by score limit 10;
 
   val nextSubmissionArrivalDelay = {
     val averageSubmissionArrivalSeconds = 78.290865 // from bigquery 2021

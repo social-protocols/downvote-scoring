@@ -7,8 +7,8 @@ class Submission(
     val id: Int,
     val timeSeconds: Int,
     val quality: Double,
-    var votes: Int = 1,
-    var score: Double = 0,
+    var score: Int = 1, // = upvotes + 1
+    var rankingFormulaValue: Double = 0,
 )
 
 object Submission {
@@ -20,19 +20,19 @@ object Simulation {
   def submit(
       timeSeconds: Int,
       submissions: mutable.ArrayBuffer[Submission],
-      votes: Int = 1,
+      score: Int = 1,
   ) = {
     val nextId        = submissions.size
     val newSubmission = new Submission(
       id = nextId,
       timeSeconds = timeSeconds,
       quality = Submission.randomQuality,
-      votes = votes,
+      score = score,
     )
     submissions += newSubmission
   }
 
-  def score(upvotes: Int, ageSeconds: Int): Double = {
+  def rankingFormula(upvotes: Int, ageSeconds: Int): Double = {
     // http://www.righto.com/2013/11/how-hacker-news-ranking-really-works.html
     val ageHours = ageSeconds / 3600.0
     Math.pow(upvotes - 1.0, 0.8) / Math.pow(ageHours + 2, 1.8)
@@ -44,7 +44,7 @@ object Simulation {
   ) = {
     submissions.takeRight(Data.updateSize).foreach { sub =>
       val ageSeconds = timeSeconds - sub.timeSeconds
-      sub.score = score(sub.votes, ageSeconds)
+      sub.rankingFormulaValue = rankingFormula(sub.score, ageSeconds)
     }
   }
 
@@ -57,8 +57,8 @@ object Simulation {
   def frontpage(submissions: mutable.ArrayBuffer[Submission]) = {
     submissions
       .takeRight(Data.updateSize)
-      .sortBy(-_.score)
-      .filter(_.votes >= Data.minimVotesForFrontpage)
+      .sortBy(-_.rankingFormulaValue)
+      .filter(_.score >= Data.minScoreToAppearOnFrontpage)
       .take(Data.frontpageSize)
   }
   def newpage(submissions: mutable.ArrayBuffer[Submission]) = {
@@ -72,14 +72,14 @@ object Simulation {
     val x = 1.0
     if (nextRandomDouble() > Data.newFrontPageVotingRatio) {
       // frontpage
-      var didVote = false
+      var didVote       = false
       val selectedRanks = Data.voteGainOnTopRankDistribution.sample(1000).distinct.toArray
-      var i = 0
+      var i             = 0
       while (!didVote && i < selectedRanks.size) {
         val selectedRank = selectedRanks(i)
         if (nextRandomDouble() < x * frontpage(selectedRank).quality) {
-          frontpage(selectedRank).votes += 1
-          didVote = true 
+          frontpage(selectedRank).score += 1
+          didVote = true
         }
         i += 1
       }
@@ -89,7 +89,7 @@ object Simulation {
       while (!didVote) {
         val selectedRank = Data.voteGainOnNewRankDistribution.sample(1).head
         if (nextRandomDouble() < x * frontpage(selectedRank).quality) {
-          newpage(selectedRank).votes += 1
+          newpage(selectedRank).score += 1
           didVote = true
         }
       }
@@ -104,7 +104,7 @@ object Simulation {
     submit(
       timeSeconds,
       submissions,
-      votes = 5,
+      score = 5,
     ) // TODO: initialize with the 1500 stories of real data
   }
 
