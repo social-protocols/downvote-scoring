@@ -1,4 +1,9 @@
-const {webDev} = require("fun-pack");
+const {webDev} = require("@fun-stack/fun-pack");
 
-module.exports = webDev();
-module.exports.devServer.disableHostCheck = true;
+module.exports = webDev({
+  indexHtml: "src/main/html/index.html",
+  assetsDir: "assets",
+  extraStaticDirs: [
+    "src" // for source maps
+  ]
+});

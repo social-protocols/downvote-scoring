@@ -13,17 +13,14 @@ import scala.scalajs.js.annotation._
 // object Css extends js.Object
 
 @js.native
-@JSImport("../../../../src/main/css/tailwind.css", JSImport.Namespace)
+@JSImport("src/main/css/tailwind.css", JSImport.Namespace)
 object TailwindCss extends js.Object
 
 object Hello {
   TailwindCss // load css
 
-  def main(args: Array[String]) = {
-
-    Outwatch.renderReplace[IO]("#app", app).unsafeRunSync()
-
-  }
+  def main(args: Array[String]) =
+    OutWatch.renderReplace[IO]("#app", app).unsafeRunSync()
 
   val app = {
     val liveNewPage     = Subject.behavior[Seq[Submission]](Nil)
@@ -43,20 +40,20 @@ object Hello {
       )
       .publish
 
-    tick.foreach { substeps =>
+    tick.value.foreach { substeps =>
       for (_ <- 0 until substeps)
         Simulation.nextStep()
     }
 
-    tick.sampleMillis(500).foreach { _ =>
+    tick.value.sampleMillis(500).foreach { _ =>
       liveNewPage.onNext(Simulation.newpage(Simulation.submissions).toSeq)
       liveTopPage.onNext(Simulation.frontpage(Simulation.submissions).toSeq)
       bestQualityPage.onNext(Simulation.bestQualityFrontpage(Simulation.submissions).toSeq)
     }
 
     div(
-      tick.scan(0L)((sum, substeps) => sum + substeps).map(timeSpan),
-      Modifier.managed(SyncIO(tick.connect())),
+      tick.value.scan(0L)((sum, substeps) => sum + substeps).map(timeSpan),
+      managed(SyncIO(tick.connect())),
       SpeedSlider(tickTime),
       div(
         display.flex,
@@ -67,12 +64,11 @@ object Hello {
     )
   }
 
-  def showPage(submissions: Seq[Submission]) = {
+  def showPage(submissions: Seq[Submission]) =
     div(
       cls := "p-5",
       submissions.take(30).map(showSubmission),
     )
-  }
 
   def timeSpan(seconds: Long) = {
     val ageHours = seconds / 3600
@@ -85,7 +81,7 @@ object Hello {
     val subtitle     = s"${submission.score} points, ${timeSpan(Simulation.timeSeconds - submission.timeSeconds)} ago"
     val qualityColor = s"rgba(0,0,255,${Math.min(submission.quality / 0.04, 1.0)})"
     div(
-      div(title, color := qualityColor),
+      div(title, color      := qualityColor),
       div(subtitle, opacity := 0.5),
     )
   }
