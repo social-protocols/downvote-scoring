@@ -4,13 +4,13 @@ import collection.mutable
 import util.Random.{nextDouble => nextRandomDouble}
 
 class Submission(
-    val id: Int,
-    val timeSeconds: Int,
-    val quality: Double,
-    var score: Int = 1, // = upvotes + 1
-    var rankingFormulaValue: Double = 0,
+  val id: Long,
+  val timeSeconds: Long,
+  val quality: Double,
+  var score: Int = 1, // = upvotes + 1
+  var rankingFormulaValue: Double = 0,
 ) {
-  def age(nowTick: Int) = nowTick - timeSeconds
+  def age(nowTick: Long) = nowTick - timeSeconds
 }
 
 object Submission {
@@ -20,11 +20,11 @@ object Submission {
 object Simulation {
 
   def submit(
-      timeSeconds: Int,
-      submissions: mutable.ArrayBuffer[Submission],
-      score: Int = 1,
+    timeSeconds: Long,
+    submissions: mutable.ArrayBuffer[Submission],
+    score: Int = 1,
   ) = {
-    val nextId        = submissions.size
+    val nextId        = submissions.size.toLong
     val newSubmission = new Submission(
       id = nextId,
       timeSeconds = timeSeconds,
@@ -34,42 +34,38 @@ object Simulation {
     submissions += newSubmission
   }
 
-  def rankingFormula(upvotes: Int, ageSeconds: Int): Double = {
+  def rankingFormula(upvotes: Int, ageSeconds: Long): Double = {
     // http://www.righto.com/2013/11/how-hacker-news-ranking-really-works.html
     val ageHours = ageSeconds / 3600.0
     Math.pow(upvotes - 1.0, 0.8) / Math.pow(ageHours + 2, 1.8)
   }
 
   def updateScoresOfNewestSubmissions(
-      timeSeconds: Int,
-      submissions: mutable.ArrayBuffer[Submission],
-  ) = {
+    timeSeconds: Long,
+    submissions: mutable.ArrayBuffer[Submission],
+  ) =
     submissions.takeRight(Data.updateSize).foreach { sub =>
       val ageSeconds = sub.age(timeSeconds)
       sub.rankingFormulaValue = rankingFormula(sub.score, ageSeconds)
     }
-  }
 
-  def bestQualityFrontpage(submissions: mutable.ArrayBuffer[Submission]) = {
+  def bestQualityFrontpage(submissions: mutable.ArrayBuffer[Submission]) =
     submissions
       .takeRight(Data.updateSize)
       .sortBy(-_.quality)
       .take(Data.frontpageSize)
-  }
-  def frontpage(submissions: mutable.ArrayBuffer[Submission]) = {
+  def frontpage(submissions: mutable.ArrayBuffer[Submission])            =
     submissions
       .takeRight(Data.updateSize)
       .sortBy(-_.rankingFormulaValue)
       .filter(_.score >= Data.minScoreToAppearOnFrontpage)
       .take(Data.frontpageSize)
-  }
-  def newpage(submissions: mutable.ArrayBuffer[Submission]) = {
+  def newpage(submissions: mutable.ArrayBuffer[Submission])              =
     submissions.takeRight(Data.newPageSize).reverse
-  }
 
   def usersVote(
-      frontpage: mutable.ArrayBuffer[Submission],
-      newpage: mutable.ArrayBuffer[Submission],
+    frontpage: mutable.ArrayBuffer[Submission],
+    newpage: mutable.ArrayBuffer[Submission],
   ) = {
     val x = 1.0
     if (nextRandomDouble() > Data.newFrontPageVotingRatio) {
@@ -85,7 +81,8 @@ object Simulation {
         }
         i += 1
       }
-    } else {
+    }
+    else {
       // newpage
       var didVote = false
       while (!didVote) {
@@ -98,17 +95,16 @@ object Simulation {
     }
   }
 
-  var timeSeconds    = 0
+  var timeSeconds    = 0L
   var nextSubmission = Data.nextSubmissionArrivalDelay.sample(1).head
   var nextVote       = Data.nextVoteArrivalDelay.sample(1).head
   val submissions    = mutable.ArrayBuffer.empty[Submission]
-  for (_ <- 0 until 1500) {
+  for (_ <- 0 until 1500)
     submit(
       timeSeconds,
       submissions,
       score = 5,
     ) // TODO: initialize with the 1500 stories of real data
-  }
 
   def nextStep() = {
 

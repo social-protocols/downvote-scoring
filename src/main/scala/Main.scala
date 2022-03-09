@@ -30,14 +30,12 @@ object Hello {
     val resetTrigger    = Subject.behavior(())
     val subSteps        = 600
     val tick            = resetTrigger
-      .switchMap(_ =>
-        tickTime
-          .switchMap(tickTime =>
-            Observable
-              .intervalMillis(tickTime)
-              .map(_ => if (tickTime == 0) subSteps else 1),
-          ),
-      )
+      .combineLatest(tickTime)
+      .switchMap { case (_, tickTime) =>
+        Observable
+          .intervalMillis(tickTime)
+          .map(_ => if (tickTime == 0) subSteps else 1)
+      }
       .publish
 
     tick.value.foreach { substeps =>
@@ -45,20 +43,21 @@ object Hello {
         Simulation.nextStep()
     }
 
-    tick.value.sampleMillis(500).foreach { _ =>
+    // visualization runs independently of simulation
+    tick.value.sampleMillis(33).foreach { _ =>
       liveNewPage.onNext(Simulation.newpage(Simulation.submissions).toSeq)
       liveTopPage.onNext(Simulation.frontpage(Simulation.submissions).toSeq)
       bestQualityPage.onNext(Simulation.bestQualityFrontpage(Simulation.submissions).toSeq)
     }
 
     div(
-      tick.value.scan(0L)((sum, substeps) => sum + substeps).map(timeSpan),
+      tick.value.scan(0L)((sum, substeps) => sum + substeps).map(timeSpanFromSeconds),
       managed(SyncIO(tick.connect())),
       SpeedSlider(tickTime),
       div(
         display.flex,
         liveNewPage.map(x => showPage(x)),
-        liveTopPage.map(x => div(x.take(89).map(_.score).sum, showPage(x))),
+        liveTopPage.map(x => showPage(x)),
         bestQualityPage.map(showPage),
       ),
     )
@@ -70,18 +69,29 @@ object Hello {
       submissions.take(30).map(showSubmission),
     )
 
-  def timeSpan(seconds: Long) = {
+  def timeSpanFromSeconds(seconds: Long): String = {
     val ageHours = seconds / 3600
     val ageMin   = (seconds % 3600) / 60
     s"${if (ageHours == 0) s"${ageMin}min" else s"${ageHours}h"}"
   }
 
-  def showSubmission(submission: Submission) = {
-    val title        = s"${submission.id} Quality: ${f"${submission.quality}%1.3f"}"
-    val subtitle     = s"${submission.score} points, ${timeSpan(Simulation.timeSeconds - submission.timeSeconds)} ago"
-    val qualityColor = s"rgba(0,0,255,${Math.min(submission.quality / 0.04, 1.0)})"
+  def showSubmission(submission: Submission): HtmlVNode = {
+    val title    = s"Story ${submission.id}"
+    val subtitle =
+      s"${submission.score} points, ${timeSpanFromSeconds(Simulation.timeSeconds - submission.timeSeconds)} ago"
+
+    val qualityAlpha = Math.min(submission.quality / 0.04, 1.0)
     div(
-      div(title, color      := qualityColor),
+      cls := "mt-2",
+      div(
+        div(
+          cls     := "bg-blue-400 inline-block mr-1 rounded-sm",
+          opacity := qualityAlpha,
+          width   := "10px",
+          height  := "10px",
+        ),
+        title,
+      ),
       div(subtitle, opacity := 0.5),
     )
   }

@@ -1,19 +1,8 @@
 package simulation
 
+import colibri.Subject
 import outwatch._
 import outwatch.dsl._
-import outwatch.dsl.tags.extra.article
-import scala.scalajs.js
-import js.JSConverters._
-import scala.scalajs.js.annotation._
-import org.scalajs.dom.console
-import org.scalajs.dom
-import cats.effect.SyncIO
-import scala.util.Try
-import collection.mutable
-import colibri.Observable
-import colibri.Cancelable
-import colibri.Subject
 
 object SpeedSlider {
   def apply(tickTime: Subject[Int]) = {
