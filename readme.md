@@ -89,7 +89,7 @@ gnuplot -e "set terminal png size 1920,1080; plot 'data' using 1:2" > data.png
 
 
 ## Related articles
-- https://felix.unote.io/hacker-news-scores (analysis of scoring inconsistencies on Hacker News)
+- https://felix.unote.io/hacker-news-scores (analysis of scoring inconsistencies on Hacker News) (Dead Link)
 
 
 ## Contact
